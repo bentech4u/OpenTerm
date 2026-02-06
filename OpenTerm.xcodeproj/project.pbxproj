@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1AF4B27B4A59C94CF88DB03 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = B37A2AE44247F858CCD3C2B5 /* SwiftTerm */; };
+		B58FAAD42F330A0000B10604 /* Shout in Frameworks */ = {isa = PBXBuildFile; productRef = B58FAAD32F330A0000B10604 /* Shout */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		B58FAAB32F3301BD00B10604 /* OpenTerm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTerm.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B58FAAD42F330A0000B10604 /* Shout in Frameworks */,
+				A1AF4B27B4A59C94CF88DB03 /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,9 +59,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B58FAABE2F3301BD00B10604 /* Build configuration list for PBXNativeTarget "OpenTerm" */;
 			buildPhases = (
+				F0E1D2C3B4A5968776543210 /* ShellScript */,
 				B58FAAAF2F3301BD00B10604 /* Sources */,
 				B58FAAB02F3301BD00B10604 /* Frameworks */,
 				B58FAAB12F3301BD00B10604 /* Resources */,
+				F0E1D2C3B4A5968776543211 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -65,6 +74,8 @@
 			);
 			name = OpenTerm;
 			packageProductDependencies = (
+				B58FAAD32F330A0000B10604 /* Shout */,
+				B37A2AE44247F858CCD3C2B5 /* SwiftTerm */,
 			);
 			productName = OpenTerm;
 			productReference = B58FAAB32F3301BD00B10604 /* OpenTerm.app */;
@@ -94,6 +105,10 @@
 			);
 			mainGroup = B58FAAAA2F3301BD00B10604;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B58FAAD22F330A0000B10604 /* XCRemoteSwiftPackageReference "Shout" */,
+				D7A27EDC4887B204DBF6D844 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B58FAAB42F3301BD00B10604 /* Products */;
 			projectDirPath = "";
@@ -113,6 +128,45 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		F0E1D2C3B4A5968776543210 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\n\"${SRCROOT}/scripts/build_freerdp.sh\"";
+			showEnvVarsInLog = 0;
+		};
+		F0E1D2C3B4A5968776543211 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\n\nFRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${EXECUTABLE_FOLDER_PATH}/../Frameworks\"\nmkdir -p \"$FRAMEWORKS_DIR\"\n\n# Copy all FreeRDP dylibs into the app Frameworks folder\nif ls \"${SRCROOT}/vendor/FreeRDP/build-macos/install/lib/\"*.dylib >/dev/null 2>&1; then\n  cp -fL \"${SRCROOT}/vendor/FreeRDP/build-macos/install/lib/\"*.dylib \"$FRAMEWORKS_DIR/\"\nfi\n\nLIBS=\"libMacFreeRDP-library.dylib libfreerdp3.3.dylib libfreerdp-client3.3.dylib libwinpr3.3.dylib libssl.3.dylib libcrypto.3.dylib\"\n\n# Fix install names for bundled dylibs\nfor lib in $LIBS; do\n  if [ -f \"$FRAMEWORKS_DIR/$lib\" ]; then\n    install_name_tool -id \"@rpath/$lib\" \"$FRAMEWORKS_DIR/$lib\" || true\n  fi\ndone\n\n# Fix internal dylib cross-references to use @rpath\nfor lib in $LIBS; do\n  if [ -f \"$FRAMEWORKS_DIR/$lib\" ]; then\n    install_name_tool -change \"libMacFreeRDP-library.dylib\" \"@rpath/libMacFreeRDP-library.dylib\" \"$FRAMEWORKS_DIR/$lib\" 2>/dev/null || true\n    install_name_tool -change \"libfreerdp3.3.dylib\" \"@rpath/libfreerdp3.3.dylib\" \"$FRAMEWORKS_DIR/$lib\" 2>/dev/null || true\n    install_name_tool -change \"libfreerdp-client3.3.dylib\" \"@rpath/libfreerdp-client3.3.dylib\" \"$FRAMEWORKS_DIR/$lib\" 2>/dev/null || true\n    install_name_tool -change \"libwinpr3.3.dylib\" \"@rpath/libwinpr3.3.dylib\" \"$FRAMEWORKS_DIR/$lib\" 2>/dev/null || true\n    # Fix Homebrew OpenSSL paths to use bundled versions\n    install_name_tool -change \"/opt/homebrew/opt/openssl@3/lib/libssl.3.dylib\" \"@rpath/libssl.3.dylib\" \"$FRAMEWORKS_DIR/$lib\" 2>/dev/null || true\n    install_name_tool -change \"/opt/homebrew/opt/openssl@3/lib/libcrypto.3.dylib\" \"@rpath/libcrypto.3.dylib\" \"$FRAMEWORKS_DIR/$lib\" 2>/dev/null || true\n  fi\ndone\n\n# Rewrite app binaries to use @rpath for FreeRDP libs\nBIN_DIR=\"${TARGET_BUILD_DIR}/${EXECUTABLE_FOLDER_PATH}\"\nif [ -d \"$BIN_DIR\" ]; then\n  for bin in \"$BIN_DIR\"/*; do\n    if [ -f \"$bin\" ]; then\n      install_name_tool -change \"libMacFreeRDP-library.dylib\" \"@rpath/libMacFreeRDP-library.dylib\" \"$bin\" 2>/dev/null || true\n      install_name_tool -change \"libfreerdp3.3.dylib\" \"@rpath/libfreerdp3.3.dylib\" \"$bin\" 2>/dev/null || true\n      install_name_tool -change \"libfreerdp-client3.3.dylib\" \"@rpath/libfreerdp-client3.3.dylib\" \"$bin\" 2>/dev/null || true\n      install_name_tool -change \"libwinpr3.3.dylib\" \"@rpath/libwinpr3.3.dylib\" \"$bin\" 2>/dev/null || true\n    fi\n  done\nfi";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B58FAAAF2F3301BD00B10604 /* Sources */ = {
@@ -251,16 +305,35 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/vendor/FreeRDP/client/Mac",
+					"$(SRCROOT)/vendor/FreeRDP/include",
+					"$(SRCROOT)/vendor/FreeRDP/winpr/include",
+					"$(SRCROOT)/vendor/FreeRDP/build-macos/install/include/freerdp3",
+					"$(SRCROOT)/vendor/FreeRDP/build-macos/install/include/winpr3",
+				);
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/vendor/FreeRDP/build-macos/install/lib",
+				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lMacFreeRDP-library",
+					"-lfreerdp",
+					"-lfreerdp-client",
+					"-lwinpr",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = work.bentech.OpenTerm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -268,6 +341,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "OpenTerm/OpenTerm-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -281,16 +355,35 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/vendor/FreeRDP/client/Mac",
+					"$(SRCROOT)/vendor/FreeRDP/include",
+					"$(SRCROOT)/vendor/FreeRDP/winpr/include",
+					"$(SRCROOT)/vendor/FreeRDP/build-macos/install/include/freerdp3",
+					"$(SRCROOT)/vendor/FreeRDP/build-macos/install/include/winpr3",
+				);
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/vendor/FreeRDP/build-macos/install/lib",
+				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lMacFreeRDP-library",
+					"-lfreerdp",
+					"-lfreerdp-client",
+					"-lwinpr",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = work.bentech.OpenTerm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -298,6 +391,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "OpenTerm/OpenTerm-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -325,6 +419,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B58FAAD22F330A0000B10604 /* XCRemoteSwiftPackageReference "Shout" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jakeheis/Shout";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.7;
+			};
+		};
+		D7A27EDC4887B204DBF6D844 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B37A2AE44247F858CCD3C2B5 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D7A27EDC4887B204DBF6D844 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+		B58FAAD32F330A0000B10604 /* Shout */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B58FAAD22F330A0000B10604 /* XCRemoteSwiftPackageReference "Shout" */;
+			productName = Shout;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B58FAAAB2F3301BD00B10604 /* Project object */;
 }
