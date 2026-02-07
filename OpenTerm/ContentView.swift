@@ -6,7 +6,9 @@ struct ContentView: View {
     @EnvironmentObject var vault: PasswordVault
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var settings: SettingsStore
+    @EnvironmentObject var macroStore: MacroStore
     @StateObject private var sessionStore = SessionStore()
+    @StateObject private var macroPlayer = MacroPlayer()
 
     @State private var sidebarTab: SidebarTab = .sessions
     @State private var showNewFolder = false
@@ -40,6 +42,8 @@ struct ContentView: View {
         HStack(spacing: 0) {
             SidebarView(
                 store: store,
+                macroStore: macroStore,
+                macroPlayer: macroPlayer,
                 selectedTab: $sidebarTab,
                 activeSession: sessionStore.activeTerminalSession,
                 sshBrowserEnabled: settings.sshBrowserEnabled,
@@ -54,7 +58,8 @@ struct ContentView: View {
                 onRequestSftpConnect: requestSftpConnect,
                 onNewConnection: { showNewConnection = true },
                 onNewFolder: { showNewFolder = true },
-                onEditSftpFile: openSftpEditor
+                onEditSftpFile: openSftpEditor,
+                onPlayMacro: playMacro
             )
             .frame(minWidth: sidebarCollapsed ? 52 : 260, idealWidth: sidebarCollapsed ? 56 : 280, maxWidth: sidebarCollapsed ? 72 : 320)
 
@@ -85,12 +90,14 @@ struct ContentView: View {
             .environmentObject(store)
             .environmentObject(vault)
             .environmentObject(settings)
+            .environmentObject(macroStore)
         }
         .sheet(item: $editingConnection) { item in
             NavigationStack {
                 ConnectionDetailView(connection: store.bindingForConnection(id: item.id))
                     .environmentObject(store)
                     .environmentObject(settings)
+                    .environmentObject(macroStore)
                     .navigationTitle("Edit Connection")
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
@@ -209,6 +216,14 @@ struct ContentView: View {
         } else {
             sidebarTab = .sessions
         }
+
+        // Execute attached macro if configured
+        if let macroId = connection.executeMacroId,
+           let macro = macroStore.macro(withId: macroId),
+           let terminal = session.terminalSession {
+            let delay = TimeInterval(connection.executeDelaySeconds ?? 2)
+            macroPlayer.playOnConnect(macro: macro, to: terminal, delay: delay)
+        }
     }
 
     private func openRdpSession(_ connection: Connection) {
@@ -318,6 +333,33 @@ struct ContentView: View {
 
     private func openSftpEditor(entry: RemoteEntry, connection: Connection, manager: SFTPManager) {
         SFTPEditorWindowController.shared.openEditor(entry: entry, connection: connection, manager: manager)
+    }
+
+    private func playMacro(_ macro: Macro) {
+        // Collect all terminal sessions that can receive macro input
+        var targets: [MacroPlayable] = []
+
+        // If in multi-session mode, get all terminal sessions
+        if sessionStore.multiSessionMode {
+            for session in sessionStore.terminalSessions {
+                guard !sessionStore.isExcludedFromMultiExec(sessionId: session.id) else { continue }
+                if let terminal = session.terminalSession {
+                    targets.append(terminal)
+                } else if let local = session.localSession {
+                    targets.append(local)
+                }
+            }
+        } else {
+            // Single session mode - use active terminal
+            if let activeTerminal = sessionStore.activeTerminalSession {
+                targets.append(activeTerminal)
+            } else if let activeLocal = sessionStore.activeLocalSession {
+                targets.append(activeLocal)
+            }
+        }
+
+        guard !targets.isEmpty else { return }
+        macroPlayer.play(macro: macro, to: targets)
     }
 }
 

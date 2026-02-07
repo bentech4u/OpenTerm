@@ -5,6 +5,7 @@ struct ConnectionDetailView: View {
     @Binding var connection: Connection
     @EnvironmentObject var store: ConnectionStore
     @EnvironmentObject var settings: SettingsStore
+    @EnvironmentObject var macroStore: MacroStore
     @State private var showIconPicker = false
     @State private var showFontSheet = false
     @State private var showColorSheet = false
@@ -225,11 +226,11 @@ struct ConnectionDetailView: View {
                 HStack {
                     Picker("Execute macro", selection: executeMacroBinding) {
                         Text("None").tag(UUID?.none)
+                        ForEach(macroStore.macros) { macro in
+                            Text(macro.name).tag(Optional(macro.id))
+                        }
                     }
-                    .disabled(true)
-                    Text("Macros coming soon")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    .frame(minWidth: 200)
                 }
             }
 

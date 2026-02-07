@@ -6,6 +6,7 @@ struct OpenTermApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var vault = PasswordVault()
     @StateObject private var settings = SettingsStore()
+    @StateObject private var macroStore = MacroStore()
 
     var body: some Scene {
         WindowGroup {
@@ -14,6 +15,7 @@ struct OpenTermApp: App {
                 .environmentObject(appState)
                 .environmentObject(vault)
                 .environmentObject(settings)
+                .environmentObject(macroStore)
                 .sheet(isPresented: $appState.showAbout) {
                     AboutView()
                 }

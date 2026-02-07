@@ -60,6 +60,15 @@ A native macOS terminal application with SSH, RDP, and local terminal support, b
 - PBKDF2 key derivation
 - Automatic or manual password saving
 
+### Macros
+- Record and playback keyboard sequences
+- Special commands: `RETURN`, `TAB`, `ESCAPE`, `CTRL+X`
+- `SLEEP=N` for delays (N seconds)
+- `WAITFOR=text` to wait for terminal output
+- Attach macros to connections for automatic execution on connect
+- Multi-session support (broadcast macros to all terminals)
+- Create, edit, duplicate, and delete macros from sidebar
+
 ## Requirements
 
 - macOS 14.0 (Sonoma) or later
@@ -142,6 +151,11 @@ OpenTerm/
 │   ├── SFTPBrowserView.swift     # SFTP file browser UI
 │   ├── SFTPTextEditorView.swift  # SFTP remote file editor UI
 │   ├── SFTPEditorWindowController.swift # Floating editor window manager
+│   ├── Macro.swift               # Macro data model and parser
+│   ├── MacroStore.swift          # Macro persistence
+│   ├── MacroPlayer.swift         # Macro playback engine
+│   ├── MacroEditorView.swift     # Macro create/edit UI
+│   ├── MacroListView.swift       # Macro list sidebar panel
 │   ├── PasswordVault.swift       # Encrypted password storage
 │   ├── ConnectionStore.swift     # Connection persistence
 │   ├── SettingsStore.swift       # App settings
@@ -155,6 +169,7 @@ OpenTerm/
 - **Connections**: `~/Library/Application Support/OpenTerm/connections.json`
 - **Settings**: `~/Library/Application Support/OpenTerm/settings.json`
 - **Password Vault**: `~/Library/Application Support/OpenTerm/vault.json`
+- **Macros**: `~/Library/Application Support/OpenTerm/macros.json`
 
 ## License
 

@@ -12,6 +12,8 @@ enum SidebarTab: String, CaseIterable, Identifiable {
 
 struct SidebarView: View {
     @ObservedObject var store: ConnectionStore
+    @ObservedObject var macroStore: MacroStore
+    @ObservedObject var macroPlayer: MacroPlayer
     @Binding var selectedTab: SidebarTab
     let activeSession: TerminalSession?
     let sshBrowserEnabled: Bool
@@ -27,6 +29,7 @@ struct SidebarView: View {
     let onNewConnection: () -> Void
     let onNewFolder: () -> Void
     let onEditSftpFile: ((RemoteEntry, Connection, SFTPManager) -> Void)?
+    let onPlayMacro: (Macro) -> Void
 
     var body: some View {
         VStack(spacing: 12) {
@@ -56,7 +59,7 @@ struct SidebarView: View {
                 case .tools:
                     placeholder("Tools coming soon")
                 case .macros:
-                    placeholder("Macros coming soon")
+                    macrosPanel
                 }
             }
         }
@@ -204,6 +207,18 @@ struct SidebarView: View {
                 placeholder("Open a session to browse files")
             }
         }
+        .frame(maxHeight: .infinity)
+    }
+
+    private var macrosPanel: some View {
+        MacroListView(
+            store: macroStore,
+            player: macroPlayer,
+            onPlay: { macro in
+                onPlayMacro(macro)
+            },
+            onEdit: { _ in }
+        )
         .frame(maxHeight: .infinity)
     }
 

@@ -4,7 +4,7 @@ import SwiftTerm
 import AppKit
 
 @MainActor
-final class LocalTerminalSession: ObservableObject, Identifiable {
+final class LocalTerminalSession: ObservableObject, Identifiable, MacroPlayable {
     let id: UUID
     let title: String
     let terminalView: OpenTermTerminalView
@@ -66,10 +66,20 @@ final class LocalTerminalSession: ObservableObject, Identifiable {
         let environment = Terminal.getEnvironmentVariables(termName: "xterm-256color")
         terminalView.startProcess(executable: shell, args: [], environment: environment, execName: nil, currentDirectory: home)
     }
+
+    // MARK: - MacroPlayable
+    func sendMacroInput(_ data: Data) {
+        terminalView.send([UInt8](data))
+    }
+
+    func getTerminalContent() -> String? {
+        let data = terminalView.getTerminal().getBufferAsData()
+        return String(data: data, encoding: .utf8)
+    }
 }
 
 @MainActor
-final class TerminalSession: ObservableObject, Identifiable {
+final class TerminalSession: ObservableObject, Identifiable, MacroPlayable {
     let id: UUID
     let connection: Connection
     let title: String
@@ -162,6 +172,16 @@ final class TerminalSession: ObservableObject, Identifiable {
                 terminalView?.send(txt: command + "\n")
             }
         }
+    }
+
+    // MARK: - MacroPlayable
+    func sendMacroInput(_ data: Data) {
+        terminalView.send([UInt8](data))
+    }
+
+    func getTerminalContent() -> String? {
+        let data = terminalView.getTerminal().getBufferAsData()
+        return String(data: data, encoding: .utf8)
     }
 }
 
