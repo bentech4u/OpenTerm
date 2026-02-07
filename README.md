@@ -1,8 +1,22 @@
 # OpenTerm
 
-A native macOS terminal application with SSH and RDP support, built with SwiftUI.
+A native macOS terminal application with SSH, RDP, and local terminal support, built with SwiftUI.
 
 ## Features
+
+### Local Terminal
+- Native local shell terminal (zsh/bash)
+- Auto-opens on app launch if no sessions exist
+- Multiple local terminal tabs supported
+- Same customization options as SSH terminals (fonts, colors)
+- Session logging support
+
+### Multi-Session Mode
+- Display all terminal sessions in a grid view
+- Broadcast keyboard input to all terminals simultaneously
+- Per-terminal exclusion checkbox to skip specific sessions
+- Multi-paste button to paste clipboard content to all terminals
+- Automatic grid layout (1-4 sessions: 2 columns, 5+ sessions: 3 columns)
 
 ### SSH Terminal
 - Full terminal emulation with SwiftTerm
@@ -108,8 +122,9 @@ OpenTerm/
 │   ├── ContentView.swift         # Main application view
 │   ├── SidebarView.swift         # Connection list sidebar
 │   ├── SessionTabsView.swift     # Tab management for sessions
+│   ├── SessionStore.swift        # Session management (SSH, RDP, Local)
+│   ├── MultiSessionGridView.swift # Multi-session grid with keyboard broadcast
 │   ├── ConnectionDetailView.swift # Connection editor
-│   ├── TerminalSession.swift     # SSH terminal session
 │   ├── RdpSession.swift          # RDP session wrapper
 │   ├── OpenTermRdpClient.m/h     # Objective-C FreeRDP bridge
 │   ├── OpenTermTerminalView.swift # Custom terminal view

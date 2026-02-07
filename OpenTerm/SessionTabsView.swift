@@ -2,48 +2,101 @@ import SwiftUI
 
 struct SessionTabsView: View {
     @ObservedObject var sessionStore: SessionStore
+    let onNewTerminal: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            tabsBar
-            Divider()
+            if !sessionStore.multiSessionMode {
+                tabsBar
+                Divider()
+            }
             content
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var tabsBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(sessionStore.sessions) { session in
-                    TabItemView(
-                        title: session.title,
-                        isActive: session.id == sessionStore.activeSessionId,
-                        onSelect: { sessionStore.activate(sessionId: session.id) },
-                        onClose: { sessionStore.close(sessionId: session.id) }
-                    )
-                }
+        HStack(spacing: 0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(sessionStore.sessions) { session in
+                        TabItemView(
+                            title: session.title,
+                            isActive: session.id == sessionStore.activeSessionId,
+                            isLocal: session.localSession != nil,
+                            onSelect: { sessionStore.activate(sessionId: session.id) },
+                            onClose: { sessionStore.close(sessionId: session.id) }
+                        )
+                    }
 
-                if sessionStore.sessions.isEmpty {
-                    Text("No active sessions")
-                        .foregroundStyle(.secondary)
-                        .font(.callout)
+                    if sessionStore.sessions.isEmpty {
+                        Text("No active sessions")
+                            .foregroundStyle(.secondary)
+                            .font(.callout)
+                    }
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+            }
+
+            Spacer()
+
+            HStack(spacing: 4) {
+                Button(action: onNewTerminal) {
+                    Image(systemName: "house")
+                        .font(.system(size: 14))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .help("Open Local Terminal")
+
+                Button(action: onNewTerminal) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 14))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .help("New Terminal Tab")
+
+                Divider()
+                    .frame(height: 20)
+                    .padding(.horizontal, 4)
+
+                Button {
+                    sessionStore.toggleMultiSessionMode()
+                } label: {
+                    Image(systemName: "rectangle.split.2x2")
+                        .font(.system(size: 14))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .help("Multi-session mode - type to all terminals at once")
+                .disabled(sessionStore.terminalSessions.count < 2)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 4)
         }
     }
 
     @ViewBuilder
     private var content: some View {
-        if let session = sessionStore.activeSession {
+        if sessionStore.multiSessionMode {
+            MultiSessionGridView(
+                sessionStore: sessionStore,
+                onExitMultiSession: {
+                    sessionStore.toggleMultiSessionMode()
+                }
+            )
+        } else if let session = sessionStore.activeSession {
             switch session {
             case .ssh(let sshSession):
                 EmbeddedTerminalView(terminalView: sshSession.terminalView)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .rdp(let rdpSession):
                 EmbeddedRdpView(session: rdpSession)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            case .local(let localSession):
+                EmbeddedTerminalView(terminalView: localSession.terminalView)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         } else {
@@ -52,7 +105,7 @@ struct SessionTabsView: View {
                     .font(.largeTitle)
                 Text("Open a session to start")
                     .font(.headline)
-                Text("Double-click a saved host on the left to open a tab.")
+                Text("Double-click a saved host on the left, or click + to open a local terminal.")
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -63,14 +116,21 @@ struct SessionTabsView: View {
 private struct TabItemView: View {
     let title: String
     let isActive: Bool
+    let isLocal: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
 
     var body: some View {
         HStack(spacing: 6) {
             Button(action: onSelect) {
-                Text(title)
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    if isLocal {
+                        Image(systemName: "terminal")
+                            .font(.caption)
+                    }
+                    Text(title)
+                        .lineLimit(1)
+                }
             }
             .buttonStyle(.plain)
 

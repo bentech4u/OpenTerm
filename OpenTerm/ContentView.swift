@@ -59,7 +59,12 @@ struct ContentView: View {
 
             Divider()
 
-            SessionTabsView(sessionStore: sessionStore)
+            SessionTabsView(sessionStore: sessionStore, onNewTerminal: openLocalTerminal)
+        }
+        .onAppear {
+            if sessionStore.sessions.isEmpty {
+                openLocalTerminal()
+            }
         }
         .onReceive(settings.objectWillChange) { _ in
             DispatchQueue.main.async {
@@ -168,6 +173,11 @@ struct ContentView: View {
         }, message: {
             Text(unsupportedMessage)
         })
+    }
+
+    private func openLocalTerminal() {
+        sessionStore.openLocalTerminal(settings: settings)
+        sidebarTab = .sessions
     }
 
     private func openSession(_ connection: Connection) {
