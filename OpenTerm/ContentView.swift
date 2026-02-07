@@ -53,7 +53,8 @@ struct ContentView: View {
                 onDuplicate: duplicateConnection,
                 onRequestSftpConnect: requestSftpConnect,
                 onNewConnection: { showNewConnection = true },
-                onNewFolder: { showNewFolder = true }
+                onNewFolder: { showNewFolder = true },
+                onEditSftpFile: openSftpEditor
             )
             .frame(minWidth: sidebarCollapsed ? 52 : 260, idealWidth: sidebarCollapsed ? 56 : 280, maxWidth: sidebarCollapsed ? 72 : 320)
 
@@ -313,6 +314,10 @@ struct ContentView: View {
     private var pendingSftpSession: TerminalSession? {
         guard let id = pendingSftpSessionId else { return nil }
         return sessionStore.session(id: id)?.terminalSession
+    }
+
+    private func openSftpEditor(entry: RemoteEntry, connection: Connection, manager: SFTPManager) {
+        SFTPEditorWindowController.shared.openEditor(entry: entry, connection: connection, manager: manager)
     }
 }
 

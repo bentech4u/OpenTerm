@@ -27,6 +27,16 @@ A native macOS terminal application with SSH, RDP, and local terminal support, b
 - X11 forwarding support
 - Post-login command execution with configurable delay
 
+### SFTP Text Editor
+- Floating, resizable, and draggable editor window
+- In-memory file editing with direct SSH-based saving
+- Monospaced font with line numbers
+- Status bar showing cursor position, line count, and file size
+- Word wrap toggle
+- Unsaved changes detection with save/discard prompts
+- Find functionality (⌘F)
+- UTF-8 and ASCII encoding support
+
 ### RDP (Remote Desktop)
 - Native RDP client powered by FreeRDP
 - Multiple display modes: Fit to Window, Fullscreen, Fixed resolution
@@ -122,14 +132,16 @@ OpenTerm/
 │   ├── ContentView.swift         # Main application view
 │   ├── SidebarView.swift         # Connection list sidebar
 │   ├── SessionTabsView.swift     # Tab management for sessions
-│   ├── SessionStore.swift        # Session management (SSH, RDP, Local)
-│   ├── MultiSessionGridView.swift # Multi-session grid with keyboard broadcast
+│   ├── SessionStore.swift        # Session state management
 │   ├── ConnectionDetailView.swift # Connection editor
+│   ├── TerminalSession.swift     # SSH terminal session
 │   ├── RdpSession.swift          # RDP session wrapper
 │   ├── OpenTermRdpClient.m/h     # Objective-C FreeRDP bridge
 │   ├── OpenTermTerminalView.swift # Custom terminal view
 │   ├── SFTPManager.swift         # SFTP operations
 │   ├── SFTPBrowserView.swift     # SFTP file browser UI
+│   ├── SFTPTextEditorView.swift  # SFTP remote file editor UI
+│   ├── SFTPEditorWindowController.swift # Floating editor window manager
 │   ├── PasswordVault.swift       # Encrypted password storage
 │   ├── ConnectionStore.swift     # Connection persistence
 │   ├── SettingsStore.swift       # App settings

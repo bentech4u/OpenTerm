@@ -26,6 +26,7 @@ struct SidebarView: View {
     let onRequestSftpConnect: (TerminalSession) -> Void
     let onNewConnection: () -> Void
     let onNewFolder: () -> Void
+    let onEditSftpFile: ((RemoteEntry, Connection, SFTPManager) -> Void)?
 
     var body: some View {
         VStack(spacing: 12) {
@@ -196,7 +197,8 @@ struct SidebarView: View {
                     connection: session.connection,
                     manager: session.sftpManager,
                     isCompact: true,
-                    onConnectRequested: { onRequestSftpConnect(session) }
+                    onConnectRequested: { onRequestSftpConnect(session) },
+                    onEditFile: onEditSftpFile
                 )
             } else {
                 placeholder("Open a session to browse files")

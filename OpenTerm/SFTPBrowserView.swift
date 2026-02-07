@@ -8,6 +8,7 @@ struct SFTPBrowserView: View {
     let isCompact: Bool
     let onConnectRequested: (() -> Void)?
     let onDisconnectRequested: (() -> Void)?
+    let onEditFile: ((RemoteEntry, Connection, SFTPManager) -> Void)?
 
     @State private var showUploadPicker = false
     @State private var showNewFolderPrompt = false
@@ -20,13 +21,15 @@ struct SFTPBrowserView: View {
         manager: SFTPManager,
         isCompact: Bool = false,
         onConnectRequested: (() -> Void)? = nil,
-        onDisconnectRequested: (() -> Void)? = nil
+        onDisconnectRequested: (() -> Void)? = nil,
+        onEditFile: ((RemoteEntry, Connection, SFTPManager) -> Void)? = nil
     ) {
         self.connection = connection
         self.manager = manager
         self.isCompact = isCompact
         self.onConnectRequested = onConnectRequested
         self.onDisconnectRequested = onDisconnectRequested
+        self.onEditFile = onEditFile
     }
 
     var body: some View {
@@ -63,12 +66,18 @@ struct SFTPBrowserView: View {
                 .onTapGesture(count: 2) {
                     if entry.isDirectory {
                         manager.changeDirectory(to: entry.name)
+                    } else {
+                        openEditor(for: entry)
                     }
                 }
                 .contextMenu {
                     if entry.isDirectory {
                         Button("Open") {
                             manager.changeDirectory(to: entry.name)
+                        }
+                    } else {
+                        Button("Edit") {
+                            openEditor(for: entry)
                         }
                     }
                     Button("Download") {
@@ -98,6 +107,10 @@ struct SFTPBrowserView: View {
                 newFileName = ""
             }
         }
+    }
+
+    private func openEditor(for entry: RemoteEntry) {
+        onEditFile?(entry, connection, manager)
     }
 
     private var header: some View {

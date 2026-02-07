@@ -4,6 +4,23 @@ import Combine
 import Shout
 #endif
 
+enum SFTPError: Error, LocalizedError {
+    case notConnected
+    case fileNotFound
+    case uploadFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .notConnected:
+            return "SFTP is not connected"
+        case .fileNotFound:
+            return "File not found"
+        case .uploadFailed:
+            return "Upload failed"
+        }
+    }
+}
+
 #if canImport(Shout)
 @MainActor
 final class SFTPManager: ObservableObject {
@@ -247,10 +264,93 @@ final class SFTPManager: ObservableObject {
         }
     }
 
+    /// Download file content directly to memory (no temp file)
+    func downloadToMemory(entry: RemoteEntry, completion: @escaping (Result<Data, Error>) -> Void) {
+        guard let sftp else {
+            completion(.failure(SFTPError.notConnected))
+            return
+        }
+        isBusy = true
+        let remote = remotePath(for: entry.name)
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let data = try Self.downloadFileToData(sftp: sftp, remotePath: remote)
+                DispatchQueue.main.async {
+                    self.isBusy = false
+                    completion(.success(data))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.statusMessage = error.localizedDescription
+                    self.isBusy = false
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
+
+    /// Upload content from memory directly to remote file
+    func uploadFromMemory(data: Data, remotePath: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let ssh = session else {
+            completion(.failure(SFTPError.notConnected))
+            return
+        }
+        isBusy = true
+        let rawPath = self.remotePath(for: remotePath)
+        // Normalize path - strip "./" prefix as some SFTP servers don't handle it well
+        let fullPath = rawPath.hasPrefix("./") ? String(rawPath.dropFirst(2)) : rawPath
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                // Use SSH command with base64 to write file - most reliable method
+                let base64Content = data.base64EncodedString()
+                let escapedPath = Self.shellEscape(fullPath)
+                let command = "echo '\(base64Content)' | base64 -d > \(escapedPath)"
+                _ = try ssh.execute(command)
+
+                DispatchQueue.main.async {
+                    self.isBusy = false
+                    self.refresh()
+                    completion(.success(()))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.statusMessage = error.localizedDescription
+                    self.isBusy = false
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
+
+    private static func downloadFileToData(sftp: SFTP, remotePath: String) throws -> Data {
+        // Create a temporary URL for download, then read into memory
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempFile = tempDir.appendingPathComponent(UUID().uuidString)
+        defer {
+            try? FileManager.default.removeItem(at: tempFile)
+        }
+        // Normalize path - strip "./" prefix as some SFTP servers don't handle it well
+        let normalizedPath = remotePath.hasPrefix("./") ? String(remotePath.dropFirst(2)) : remotePath
+        try sftp.download(remotePath: normalizedPath, localURL: tempFile)
+        return try Data(contentsOf: tempFile)
+    }
+
     private func remotePath(for name: String) -> String {
+        // Already a full/absolute path - don't modify
         if name.hasPrefix("/") {
             return name
         }
+        // Already a relative path from current directory - don't prepend again
+        if name.hasPrefix("./") || name.hasPrefix("../") || name == "." || name == ".." {
+            return name
+        }
+        // Tilde paths are home-relative - don't modify
+        if name.hasPrefix("~") {
+            return name
+        }
+        // Relative name - prepend current path
         let base = Self.resolvePath(currentPath)
         if base.hasSuffix("/") {
             return base + name
