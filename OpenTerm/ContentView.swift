@@ -33,7 +33,6 @@ struct ContentView: View {
     @State private var vaultUnlockError: String?
     @State private var pendingOpenConnection: Connection?
     @State private var pendingRdpConnection: Connection?
-    @State private var showRdpPasswordPrompt = false
     @State private var showUnsupportedAlert = false
     @State private var unsupportedMessage = ""
 
@@ -108,13 +107,11 @@ struct ContentView: View {
                 }
             }
         }
-        .sheet(isPresented: $showRdpPasswordPrompt) {
-            if let connection = pendingRdpConnection {
-                RdpPasswordPrompt(connection: connection, policy: settings.passwordSavePolicy) { password in
-                    openRdpSessionWithPassword(connection, password: password)
-                } onCancel: {
-                    pendingRdpConnection = nil
-                }
+        .sheet(item: $pendingRdpConnection) { connection in
+            RdpPasswordPrompt(connection: connection, policy: settings.passwordSavePolicy) { password in
+                openRdpSessionWithPassword(connection, password: password)
+            } onCancel: {
+                pendingRdpConnection = nil
             }
         }
         .sheet(isPresented: $showRenamePrompt) {
@@ -209,7 +206,6 @@ struct ContentView: View {
             return
         }
         pendingRdpConnection = connection
-        showRdpPasswordPrompt = true
     }
 
     private func openRdpSessionWithPassword(_ connection: Connection, password: String) {
