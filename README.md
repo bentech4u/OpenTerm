@@ -1,4 +1,4 @@
-# OpenTerm
+# OpenTerm -> changed to Terminal++
 
 A native macOS terminal application with SSH, RDP, and local terminal support, built with SwiftUI.
 
@@ -81,32 +81,7 @@ A native macOS terminal application with SSH, RDP, and local terminal support, b
 3. Drag `OpenTerm.app` to your Applications folder
 4. On first launch, right-click → Open → Open to bypass Gatekeeper
 
-## Building from Source
 
-### Prerequisites
-
-- Xcode 15.0 or later
-- [Homebrew](https://brew.sh) (for building FreeRDP)
-
-### Build Steps
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/OpenTerm.git
-cd OpenTerm
-
-# Open in Xcode
-open OpenTerm.xcodeproj
-
-# Build (Cmd+B) or Run (Cmd+R)
-```
-
-The FreeRDP libraries are pre-built and included in the `vendor/` directory. If you need to rebuild them:
-
-```bash
-cd OpenTerm/scripts
-./build_freerdp.sh
-```
 
 ## Libraries & Dependencies
 
@@ -132,44 +107,6 @@ cd OpenTerm/scripts
 - Security (for AES-GCM encryption)
 - CryptoKit (for PBKDF2)
 
-## Project Structure
-
-```
-OpenTerm/
-├── OpenTerm/
-│   ├── Models.swift              # Data models (Connection, Folder, etc.)
-│   ├── ContentView.swift         # Main application view
-│   ├── SidebarView.swift         # Connection list sidebar
-│   ├── SessionTabsView.swift     # Tab management for sessions
-│   ├── SessionStore.swift        # Session state management
-│   ├── ConnectionDetailView.swift # Connection editor
-│   ├── TerminalSession.swift     # SSH terminal session
-│   ├── RdpSession.swift          # RDP session wrapper
-│   ├── OpenTermRdpClient.m/h     # Objective-C FreeRDP bridge
-│   ├── OpenTermTerminalView.swift # Custom terminal view
-│   ├── SFTPManager.swift         # SFTP operations
-│   ├── SFTPBrowserView.swift     # SFTP file browser UI
-│   ├── SFTPTextEditorView.swift  # SFTP remote file editor UI
-│   ├── SFTPEditorWindowController.swift # Floating editor window manager
-│   ├── Macro.swift               # Macro data model and parser
-│   ├── MacroStore.swift          # Macro persistence
-│   ├── MacroPlayer.swift         # Macro playback engine
-│   ├── MacroEditorView.swift     # Macro create/edit UI
-│   ├── MacroListView.swift       # Macro list sidebar panel
-│   ├── PasswordVault.swift       # Encrypted password storage
-│   ├── ConnectionStore.swift     # Connection persistence
-│   ├── SettingsStore.swift       # App settings
-│   └── vendor/
-│       └── FreeRDP/              # Pre-built FreeRDP libraries
-└── README.md
-```
-
-## Data Storage
-
-- **Connections**: `~/Library/Application Support/OpenTerm/connections.json`
-- **Settings**: `~/Library/Application Support/OpenTerm/settings.json`
-- **Password Vault**: `~/Library/Application Support/OpenTerm/vault.json`
-- **Macros**: `~/Library/Application Support/OpenTerm/macros.json`
 
 ## License
 
@@ -185,8 +122,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+
